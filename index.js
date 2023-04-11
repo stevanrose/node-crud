@@ -43,6 +43,24 @@ app.get("/person", async (req, res) => {
   }
 });
 
+app.get("/person/:email", async (req, res) => {
+  const email = req.params.email;
+  console.log("params: ", req.params);
+
+  console.log("email: ", email);
+  try {
+    const result = await prisma.person.findUnique({
+      where: {
+        email: req.params.email,
+      },
+    });
+    res.status(200).json(result);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 const port = process.env.PORT || "3059";
 
 app.listen(port, () => {
