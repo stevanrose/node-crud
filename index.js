@@ -1,7 +1,8 @@
 const express = require("express");
-const { PrismaClient } = require("@prisma/client");
+const { PrismaClient, Prisma } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bodyParser = require("body-parser");
+const { PrismaError } = require("prisma-error-enum");
 
 const app = express();
 
@@ -13,10 +14,17 @@ app.post("/person", async (req, res) => {
     const person = await prisma.person.create({
       data: req.body,
     });
+    console.log("SUCCESS: ", person);
     res.status(201).json(person);
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ message: error.message });
+  } catch (e) {
+    console.log("ERROR: ", JSON.stringify(e));
+    if (e.code === PrismaError.UniqueConstraintViolation) {
+      res.status(409).json({
+        message: `Person already exists with this email: ${req.body.email}`,
+      });
+    } else {
+      res.status(e.code).json({ message: e.message });
+    }
   }
 });
 
@@ -37,9 +45,8 @@ app.get("/person", async (req, res) => {
 
     var response = { results: results, pagination: pagination };
     res.status(200).json(response);
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ message: error.message });
+  } catch (e) {
+    res.status(e.status).json({ message: e.message });
   }
 });
 
@@ -49,15 +56,20 @@ app.get("/person/:email", async (req, res) => {
 
   console.log("email: ", email);
   try {
-    const result = await prisma.person.findUnique({
+    const result = await prisma.person.findUniqueOrThrow({
       where: {
         email: req.params.email,
       },
     });
     res.status(200).json(result);
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ message: error.message });
+  } catch (e) {
+    if (e.code === PrismaError.RecordsNotFound) {
+      res.status(404).json({
+        message: `Person not found with email: ${email}`,
+      });
+    } else {
+      res.status(e.code).json({ message: e.message });
+    }
   }
 });
 
