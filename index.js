@@ -28,7 +28,18 @@ app.post("/person", async (req, res) => {
   }
 });
 
-app.get("/person", async (req, res) => {
+app.post("/person/v2", async (req, res, next) => {
+  try {
+    const person = await prisma.person.create({
+      data: req.body,
+    });
+    res.status(201).json(person);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/person", async (req, res, next) => {
   try {
     const totalRecords = await prisma.person.count();
     var pagination = {
@@ -45,16 +56,12 @@ app.get("/person", async (req, res) => {
 
     var response = { results: results, pagination: pagination };
     res.status(200).json(response);
-  } catch (e) {
-    res.status(e.status).json({ message: e.message });
+  } catch (error) {
+    next(error);
   }
 });
 
-app.get("/person/:email", async (req, res) => {
-  const email = req.params.email;
-  console.log("params: ", req.params);
-
-  console.log("email: ", email);
+app.get("/person/:email", async (req, res, next) => {
   try {
     const result = await prisma.person.findUniqueOrThrow({
       where: {
@@ -62,16 +69,30 @@ app.get("/person/:email", async (req, res) => {
       },
     });
     res.status(200).json(result);
-  } catch (e) {
-    if (e.code === PrismaError.RecordsNotFound) {
-      res.status(404).json({
-        message: `Person not found with email: ${email}`,
-      });
-    } else {
-      res.status(e.code).json({ message: e.message });
-    }
+  } catch (error) {
+    error.meta = { email: req.params.email };
+    next(error);
   }
 });
+
+function errorHandler(error, req, res, next) {
+  let status = 500;
+  let message = `Internal server error`;
+
+  if (error.code === PrismaError.UniqueConstraintViolation) {
+    status = 409;
+    message = `Person already exists with this email: ${req.body.email}`;
+  }
+
+  if (error.code === PrismaError.RecordsNotFound) {
+    status = 404;
+    message = `Person not found with email: ${error.meta.email}`;
+  }
+
+  res.status(status).json({ message: message });
+}
+
+app.use(errorHandler);
 
 const port = process.env.PORT || "3059";
 
