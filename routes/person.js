@@ -5,12 +5,15 @@ const Validator = require("../middlewares/Validator");
 const { PrismaClient, Prisma } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-router.post("/", Validator("personSchema"), async (req, res, next) => {
+router.delete("/:id", async (req, res, next) => {
   try {
-    const person = await prisma.person.create({
-      data: req.body,
+    const person = await prisma.person.delete({
+      where: {
+        id: parseInt(req.params.id),
+      },
     });
-    res.status(201).json(person);
+
+    res.status(204);
   } catch (error) {
     next(error);
   }
@@ -48,6 +51,39 @@ router.get("/:email", async (req, res, next) => {
     res.status(200).json(result);
   } catch (error) {
     error.meta = { email: req.params.email };
+    next(error);
+  }
+});
+
+router.post("/", Validator("personPostSchema"), async (req, res, next) => {
+  try {
+    const person = await prisma.person.create({
+      data: req.body,
+    });
+    res.status(201).json(person);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put("/:id", Validator("personPutSchema"), async (req, res, next) => {
+  try {
+    const person = await prisma.person.update({
+      where: {
+        id: parseInt(req.params.id),
+      },
+      data: {
+        firstName: req.body.firstName || undefined,
+        lastName: req.body.lastName || undefined,
+        gender: req.body.gender || undefined,
+        dateOfBirth: req.body.dayeOfBirth || undefined,
+        email: req.body.email || undefined,
+        phoneNumber: req.body.phoneNumber || undefined,
+      },
+    });
+
+    res.status(200).json(person);
+  } catch (error) {
     next(error);
   }
 });

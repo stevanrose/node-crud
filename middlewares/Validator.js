@@ -1,6 +1,4 @@
 const createHttpError = require("http-errors");
-const status = require("http-status");
-const Joi = require("joi");
 const Validators = require("../validators");
 
 const options = {

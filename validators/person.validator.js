@@ -1,5 +1,5 @@
 const Joi = require("joi");
-const personSchema = Joi.object()
+const personPostSchema = Joi.object()
   .options({ abortEarly: false })
   .keys({
     firstName: Joi.string().alphanum().required(),
@@ -10,4 +10,18 @@ const personSchema = Joi.object()
     phoneNumber: Joi.string().regex(/^\d+$/),
   });
 
-module.exports = personSchema;
+const personPutSchema = Joi.object()
+  .options({ abortEarly: false })
+  .keys({
+    firstName: Joi.string().alphanum(),
+    lastName: Joi.string().alphanum(),
+    gender: Joi.string().alphanum(),
+    dateOfBirth: Joi.date(),
+    email: Joi.string().email(),
+    phoneNumber: Joi.string().regex(/^\d+$/),
+  });
+
+module.exports = {
+  personPostSchema,
+  personPutSchema,
+};

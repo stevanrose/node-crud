@@ -1,14 +1,14 @@
 const express = require("express");
 const createHttpError = require("http-errors");
-const bodyParser = require("body-parser");
 const { PrismaError } = require("prisma-error-enum");
 const app = express();
 
 const personRouter = require("./routes/person");
-app.use("/person", personRouter);
 
+app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
-app.use(bodyParser.json());
+
+app.use("/person", personRouter);
 
 app.use((req, res, next) => {
   next(createHttpError(404));

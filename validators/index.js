@@ -1,5 +1,6 @@
-const personSchema = require("./person.validator");
+const { personPostSchema, personPutSchema } = require("./person.validator");
 
 module.exports = {
-  personSchema,
+  personPostSchema,
+  personPutSchema,
 };
