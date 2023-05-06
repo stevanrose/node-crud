@@ -6,15 +6,17 @@ const { PrismaClient, Prisma } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 router.delete("/:id", async (req, res, next) => {
+  console.log("In Delete - ID: ", req.params.id);
   try {
-    const person = await prisma.person.delete({
+    const result = await prisma.person.delete({
       where: {
         id: parseInt(req.params.id),
       },
     });
 
-    res.status(204);
+    res.status(204).json(result);
   } catch (error) {
+    console.log("Handling delete error");
     next(error);
   }
 });

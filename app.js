@@ -4,6 +4,7 @@ const { PrismaError } = require("prisma-error-enum");
 const app = express();
 
 const personRouter = require("./routes/person");
+const e = require("express");
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
@@ -25,7 +26,13 @@ app.use((err, req, res, next) => {
 
   if (err.code === PrismaError.RecordsNotFound) {
     status = 404;
-    message = `Person not found with email: ${err.meta.email}`;
+    if (err.meta.hasOwnProperty("email")) {
+      message = `Person not found with email: ${err.meta.email}`;
+    } else if (err.meta.hasOwnProperty("cause")) {
+      message = err.meta.cause;
+    } else {
+      message = `Record does not exist`;
+    }
   }
 
   res.status(status).json({
